@@ -1,0 +1,209 @@
+#  *********************************************************************** *
+#                                                                          *
+#  This file is part of Integrated Structure Evolution Environment (ISEE). *
+#  Copyright (C) 2002-2007 Keyan Zahedi and Martin Huelse                  *
+#  All rights reserved.                                                    *
+#  Email: {keyan,aberys}@users.sourceforge.net                             *
+#  Web: http://sourceforge.net/projects/isee                               *
+#                                                                          *
+#  For a list of contributors see the file AUTHORS.                        *
+#                                                                          *
+#  ISEE is free software; you can redistribute it and/or modify it under   *
+#  the terms of the GNU General Public License as published by the Free    *
+#  Software Foundation; either version 2 of the License, or (at your       *
+#  option) any later version.                                              *
+#                                                                          *
+#  ISEE is distributed in the hope that it will be useful, but WITHOUT     *
+#  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or   *
+#  FITNESS FOR A PARTICULAR PURPOSE.                                       *
+#                                                                          *
+#  You should have received a copy of the GNU General Public License       *
+#  along with ISEE in the file COPYING; if not, write to the Free          *
+#  Software Foundation, Inc., 51 Franklin St, Fifth Floor,                 *
+#  Boston, MA 02110-1301, USA                                              *
+#                                                                          *
+#  *********************************************************************** *
+
+CP := $(CLASSPATH):./packages/ledatastream.jar:./packages/junit.jar:./packages/log4j-1.2.8.jar:./packages/epsgraphics.jar:./packages/gnujaxp.jar:./packages/jcommon-1.0.0-rc1.jar:./packages/jfreechart-1.0.0-rc1.jar:./packages/junit.jar:./packages/looks-1.3.2.jar
+
+JAVAC=jikes -source 1.5 -target 1.5 -g 
+#JAVAC=javac -g
+
+%.class : %.java
+	echo $(JAVAC) $<
+	$(JAVAC) -classpath $(CP) -O $<
+
+JAVAFILES := $(shell find . -name "*.java")
+CLASSFILES := $(shell find . -name "*.java" | sed s/.java/.class/ )
+
+PACKAGEDIR := ./packages
+
+PACKAGES := $(shell find . -type f -name "*.java" -print | sed 's,/[^/]*$$,,' | sort | uniq | cut -c3- | sed 's/\//./g')  
+
+################################################################################
+### jar file creation stuff
+################################################################################
+
+HINTONCLASSES  := $(shell find hinton -name "*.class" -printf "'%h/%f' ")
+HINTONADDONS    += $(shell find hinton -name "*.gif")
+CHOLSEYCLASSES := $(shell find cholsey -name "*.class" -printf "'%h/%f' ")
+INDYCLASSES    := $(shell find indy -name "*.class" -printf "'%h/%f' ")
+ADDONCLASSES   := $(shell find addon -name "*.class" -printf "'%h/%f' ")
+HINTON_ISEE_CLASSES  := $(shell find hinton -name "*.class" -printf "'%h/%f' " -and -not -name "*simulators")
+
+################################################################################
+### file and linecount stuff
+################################################################################
+
+HINTONFILESCOUNT = $(shell find hinton -name "*.java" | wc -l)
+HINTONFITNESSFUNCTIONFILESCOUNT = $(shell find hinton/fitnessfunctions -name "*.java" | wc -l)
+HINTONSIMULATORFILESCOUNT = $(shell find hinton/simulators -name "*.java" | wc -l)
+HINTONROBOTFILESCOUNT = $(shell find hinton/robots -name "*.java" | wc -l)
+
+HINTONCOREFILES = $(shell find hinton -name "*.java" | \
+		sed 's/^.*\(FitnessFunctions\|Simulators\|Robots\).*//g')
+
+EVOSUNFILESCOUNT = $(shell find Evolution -name "*.java" | wc -l)
+
+EVOSUNCOREFILESCOUNT = $(shell find Evolution -name "*.java"| \
+		sed 's/^.*Pole.*//g' | wc -l)
+
+POLEFILESCOUNT = $(shell find Evolution -name "Pole*.java"| wc -l)
+POLEFILES = $(shell find Evolution -name "Pole*.java")
+
+EVOSUNCOREFILES = $(shell find Evolution -name "*.java"| \
+		sed 's/^.*Pole.*//g')
+
+CHOLSEYCOREFILES = $(shell find cholsey -name "*.java" | \
+		sed 's/^.*SO.*//g')
+
+BRIGHTWELLFILES = $(shell find brightwell -name "*.java")
+
+################################################################################
+### make rules
+################################################################################
+
+
+all: $(CLASSFILES)
+
+help:
+	echo ""
+	echo "choose one of the options below:"
+	echo "   make all        - compile all *.java files in the tree"
+	echo "   make touch      - touch all sources"
+	echo "   make javadoc    - generates complete documentation in directory \
+		./doc"
+	echo "   make clean     - removes "*.class" files"
+	echo "   make linecount - displays source code line counts and some stats"
+	echo "   make jar       - creates jar files of every package"
+	echo "   make bz2tar    - creates a .tar.bz2 file of the current directory \
+		and places it one directory above"
+	echo "   make tgz       - creates a .tgz file of the current directory \
+		and places it one directory above"
+	echo ""
+
+javadoc:
+	echo $(PACKAGES)
+	rm -rf ./doc 
+	mkdir ./doc 
+	javadoc -sourcepath .:./hinton/fitnessfunctions -link http://java.sun.com/j2se/1.4/docs/api -author -d ./doc $(PACKAGES) 
+
+
+touch:
+	find . -name "*.java" -exec touch {} \;
+
+clean:
+	echo rm $(CLASSFILES)
+	find . -name "*.class" -exec rm {} \;
+	find . -name "*~" -exec rm {} \;
+	find . -name "#*#" -exec rm {} \;	
+
+linecount:
+	@echo -n "Number of classes in ISEE                    "
+	find . -name "*.java" | wc -l
+	@echo -n "Number of classes in Hinton                  "
+	find hinton -name "*.java" | wc -l
+	@echo -n "Number of classes in FitnessFunctions        "
+	find hinton/fitnessfunctions -name "*.java" | wc -l
+	@echo -n "Number of classes in Simulators              "
+	find hinton/simulators -name "*.java" | wc -l
+	@echo -n "Number of classes in Robots                  "
+	find hinton/robots -name "*.java" | wc -l
+	@echo -n "Number of classes in Hinton (core)           "
+	@echo $(HINTONFILESCOUNT) - $(HINTONSIMULATORFILESCOUNT) - \
+		$(HINTONFITNESSFUNCTIONFILESCOUNT) - $(HINTONROBOTFILESCOUNT)| bc
+	@echo -n "Number of classes in Cholsey                 "
+	find cholsey -name "*.java" | wc -l
+	@echo -n "Number of classes in Moreton                 "
+	find moreton -name "*.java" | wc -l
+	@echo -n "Number of classes in TestCases               "
+	find testcases -name "*.java" | wc -l
+	@echo -n "Number of classes in Evolution               "
+	find Evolution -name "*.java" | wc -l
+	@echo -n "Number of classes in EvoSun-Core             "
+	find Evolution -not -name "Pole*.java" -and -name "*.java" | wc -l
+	@echo -n "Number of classes in PoleBalancer            "
+	find Evolution -name "Pole*.java" | wc -l
+	@echo -n "Number of classes in indy                    "
+	find indy -name "*.java" | wc -l
+	@echo -n "Number of classes in AddOn                   "
+	find addon -name "*.java" | wc -l
+	@echo -n "Number of classes in brightwell              "
+	find brightwell -name "*.java" | wc -l
+	@echo -n "Number of Lines of Code in Hinton-Core       "
+	@echo $(HINTONCOREFILES) | xargs cat | wc -l
+	@echo -n "Number of Lines of Code in Cholsey-Core      "
+	@echo $(CHOLSEYCOREFILES) | xargs cat | wc -l
+	@echo -n "Number of Lines of Code in EvoSun-Core       "
+	@echo $(EVOSUNCOREFILES) | xargs cat | wc -l
+	@echo -n "Number of Lines of Code in PoleBalancer      "
+	@echo $(POLEFILES) | xargs cat | wc -l
+	@echo -n "Number of Lines of Code in Brightwell        "
+	@echo $(BRIGHTWELLFILES) | xargs cat | wc -l
+	@echo -n "Number of Lines of Code in TestCases         "
+	find testcases -name "*.java"  | xargs cat | wc -l
+	@echo -n "Number of Lines of Code in TestCases.Cholsey "
+	find testcases/cholsey -name "*.java"  | xargs cat | wc -l
+	@echo -n "Total LOC in ISEE                            "
+	find . -name "*.java" | xargs cat | wc -l
+ 
+bz2tar:
+	rm -rf doc
+	tar -c * -jvf ../java.bz2.tar
+
+tgz:
+	rm -rf doc
+	tar -c * -zvf ../java.tgz
+
+commit:
+	cvs commit
+#	cvs commit Hinton
+#	cvs commit NetConverter
+#	cvs commit JSalamander
+#	cvs commit indy/util
+#	cvs commit packages
+#	cvs commit Moreton
+	
+update:
+	cvs update
+#	cvs update Hinton
+#	cvs update NetConverter
+#	cvs update JSalamander
+#	cvs update indy/util
+#	cvs update packages
+#	cvs update Moreton
+
+
+
+	
+.SILENT:
+
+
+
+
+
+
+
+
+
+

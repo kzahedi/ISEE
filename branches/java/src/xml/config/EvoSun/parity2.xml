@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="LATIN1"?>
+<!-- ***********************************************************************-->
+<!--                                                                        -->
+<!-- This file is part of Integrated Structure Evolution Environment (ISEE).-->
+<!-- Copyright (C) 2002-2007 Keyan Zahedi and Martin Huelse                 -->
+<!-- All rights reserved.                                                   -->
+<!-- Email: {keyan,aberys}@users.sourceforge.net                            -->
+<!-- Web: http://sourceforge.net/projects/isee                              -->
+<!--                                                                        -->
+<!-- For a list of contributors see the file AUTHORS.                       -->
+<!--                                                                        -->
+<!-- ISEE is free software; you can redistribute it and/or modify it under  -->
+<!-- the terms of the GNU General Public License as published by the Free   -->
+<!-- Software Foundation; either version 2 of the License, or (at your      -->
+<!-- option) any later version.                                             -->
+<!--                                                                        -->
+<!-- ISEE is distributed in the hope that it will be useful, but WITHOUT    -->
+<!-- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or  -->
+<!-- FITNESS FOR A PARTICULAR PURPOSE.                                      -->
+<!--                                                                        -->
+<!-- You should have received a copy of the GNU General Public License      -->
+<!-- along with ISEE in the file COPYING; if not, write to the Free         -->
+<!-- Software Foundation, Inc., 51 Franklin St, Fifth Floor,                -->
+<!-- Boston, MA 02110-1301, USA                                             -->
+<!--                                                                        -->
+<!-- ***********************************************************************-->
+<!DOCTYPE PopParam [
+<!ELEMENT PopParam (InitialStructure, Variation, Evaluation, Selection)>
+<!ELEMENT InitialStructure EMPTY>
+<!ATTLIST InitialStructure
+    numInpNeuron      CDATA #REQUIRED
+    numOutNeuron      CDATA #REQUIRED
+    transferfunction  CDATA #REQUIRED
+    synapseMode       CDATA #REQUIRED
+>
+<!ELEMENT Neuron (Synapse*)>
+<!ATTLIST Neuron
+      Bias                CDATA #REQUIRED
+      TransmitterLevel    CDATA #IMPLIED
+      ReceptorLevel       CDATA #IMPLIED
+      Layer               CDATA #REQUIRED
+      Process             CDATA #REQUIRED
+>
+<!ELEMENT Synapse EMPTY>
+<!ATTLIST Synapse
+      Source              CDATA #REQUIRED
+      Strength            CDATA #REQUIRED
+      Process             CDATA #REQUIRED
+>
+<!ELEMENT Variation  (Combinatorial, RealValue, Homeokinese)>
+<!ELEMENT Combinatorial EMPTY>
+<!ATTLIST Combinatorial
+          InsNeu             CDATA #REQUIRED
+          DelNeu             CDATA #REQUIRED
+          InsSyn             CDATA #REQUIRED
+          DelSyn             CDATA #REQUIRED
+          Connect            CDATA #REQUIRED
+          MaxHidden          CDATA #REQUIRED
+>
+<!ELEMENT RealValue   (Weight, Bias, Decay)>
+<!ELEMENT Weight EMPTY>
+<!ATTLIST Weight
+          prob             CDATA #REQUIRED
+          strength         CDATA #REQUIRED
+          limit            CDATA #REQUIRED
+>
+<!ELEMENT Bias EMPTY>
+<!ATTLIST Bias
+          prob             CDATA #REQUIRED
+          strength         CDATA #REQUIRED
+          limit            CDATA #REQUIRED
+>
+<!ELEMENT Decay EMPTY>
+<!ATTLIST Decay
+          prob             CDATA #REQUIRED
+          strength         CDATA #REQUIRED
+          limit            CDATA #REQUIRED
+>
+<!ELEMENT Homeokinese (ModFreq, ModAmpl, LearnRate, OffSet)>
+<!ELEMENT ModFreq EMPTY>
+<!ATTLIST ModFreq
+          prob             CDATA #REQUIRED
+          strength         CDATA #REQUIRED
+          limit            CDATA #REQUIRED
+>
+<!ELEMENT ModAmpl EMPTY>
+<!ATTLIST ModAmpl
+          prob             CDATA #REQUIRED
+          strength         CDATA #REQUIRED
+          limit            CDATA #REQUIRED
+>
+<!ELEMENT LearnRate EMPTY>
+<!ATTLIST LearnRate
+          prob             CDATA #REQUIRED
+          strength         CDATA #REQUIRED
+          limit            CDATA #REQUIRED
+>
+<!ELEMENT OffSet EMPTY>
+<!ATTLIST OffSet
+          prob             CDATA #REQUIRED
+          strength         CDATA #REQUIRED
+          limit            CDATA #REQUIRED
+>
+<!ELEMENT Evaluation (Costs, Constants, Communication)>
+<!ELEMENT Costs EMPTY>
+<!ATTLIST Costs
+      Neurons            CDATA #REQUIRED
+      Synapses           CDATA #REQUIRED
+>
+<!ELEMENT Constants EMPTY>
+<!ATTLIST Constants
+      C0           CDATA #REQUIRED
+      C1           CDATA #REQUIRED
+      C2           CDATA #REQUIRED
+      C3           CDATA #REQUIRED
+>
+<!ELEMENT Communication EMPTY>
+<!ATTLIST Communication
+      ServerPort            CDATA #REQUIRED
+>
+<!ELEMENT Selection  EMPTY>
+<!ATTLIST Selection
+      PopSize              CDATA #REQUIRED
+      BirthGamma           CDATA #REQUIRED
+      SaveBest             CDATA #REQUIRED
+>
+
+]>
+<PopParam>
+     <InitialStructure  numInpNeuron ="4" numOutNeuron ="2" transferfunction ="tanh" synapseMode ="conventional"/>
+     <Variation>
+          <Combinatorial    InsNeu = "0.0" DelNeu = "0.0" InsSyn = "0.0" DelSyn = "0.0" Connect = "0.0" MaxHidden = "100"/>
+          <RealValue>
+                <Weight   prob = "0.5" strength = "0.2" limit = "20.0"/>
+                <Bias     prob = "0.5" strength = "0.25" limit = "10.0"/>
+                <Decay    prob = "0.0" strength = "0.0" limit = "0.0"/>
+          </RealValue>
+          <Homeokinese>
+                <ModFreq    prob = "0.0" strength = "0.0" limit = "0.0"/>
+                <ModAmpl    prob = "0.0" strength = "0.0" limit = "0.0"/>
+                <LearnRate    prob = "0.0" strength = "0.0" limit = "0.0"/>
+                <OffSet    prob = "0.0" strength = "0.0" limit = "0.0"/>
+          </Homeokinese>
+     </Variation>
+     <Evaluation>
+          <Costs  Neurons = "0.0" Synapses = "0.0"/>
+          <Constants   C0 = "1.0" C1 = "1.1" C2 = "1.2" C3 = "1.3"/>
+          <Communication  ServerPort = "7000"/>
+     </Evaluation>
+     <Selection   PopSize = "50" BirthGamma = "1.6" SaveBest = "1"/>
+</PopParam>

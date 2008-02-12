@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<!-- ***********************************************************************-->
+<!--                                                                        -->
+<!-- This file is part of Integrated Structure Evolution Environment (ISEE).-->
+<!-- Copyright (C) 2002-2007 Keyan Zahedi and Martin Huelse                 -->
+<!-- All rights reserved.                                                   -->
+<!-- Email: {keyan,aberys}@users.sourceforge.net                            -->
+<!-- Web: http://sourceforge.net/projects/isee                              -->
+<!--                                                                        -->
+<!-- For a list of contributors see the file AUTHORS.                       -->
+<!--                                                                        -->
+<!-- ISEE is free software; you can redistribute it and/or modify it under  -->
+<!-- the terms of the GNU General Public License as published by the Free   -->
+<!-- Software Foundation; either version 2 of the License, or (at your      -->
+<!-- option) any later version.                                             -->
+<!--                                                                        -->
+<!-- ISEE is distributed in the hope that it will be useful, but WITHOUT    -->
+<!-- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or  -->
+<!-- FITNESS FOR A PARTICULAR PURPOSE.                                      -->
+<!--                                                                        -->
+<!-- You should have received a copy of the GNU General Public License      -->
+<!-- along with ISEE in the file COPYING; if not, write to the Free         -->
+<!-- Software Foundation, Inc., 51 Franklin St, Fifth Floor,                -->
+<!-- Boston, MA 02110-1301, USA                                             -->
+<!--                                                                        -->
+<!-- ***********************************************************************-->
+
+<!DOCTYPE SimCom SYSTEM "../../dtd/SimCom.dtd">
+<!--
+  $Author: zahedi $
+-->
+
+
+<SimCom>
+  <InputParameter>
+    <Parameter Name="MotorLeft"/>
+    <Parameter Name="MotorRight"/>
+  </InputParameter>
+  <OutputParameter>
+    <!-- obstacles from -1 to 1, -1 = far away, or not seen -->
+    <Parameter Name="Distance0"/>
+    <Parameter Name="Distance1"/>
+    <Parameter Name="Distance2"/>
+    <Parameter Name="Distance3"/>
+    <Parameter Name="Distance4"/>
+    <Parameter Name="Distance5"/>
+    <Parameter Name="Distance6"/>
+    <Parameter Name="Distance7"/>
+
+    <!-- light intensity from -1 to 1, -1 = dark, 1 = bright -->
+    <Parameter Name="Light0"/>
+    <Parameter Name="Light1"/>
+    <Parameter Name="Light2"/>
+    <Parameter Name="Light3"/>
+    <Parameter Name="Light4"/>
+    <Parameter Name="Light5"/>
+    <Parameter Name="Light6"/>
+    <Parameter Name="Light7"/>
+  </OutputParameter>
+  <CommunicationPort>
+    10000
+  </CommunicationPort>
+</SimCom>

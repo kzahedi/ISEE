@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="LATIN1"?>
+<!-- ***********************************************************************-->
+<!--                                                                        -->
+<!-- This file is part of Integrated Structure Evolution Environment (ISEE).-->
+<!-- Copyright (C) 2002-2007 Keyan Zahedi and Martin Huelse                 -->
+<!-- All rights reserved.                                                   -->
+<!-- Email: {keyan,aberys}@users.sourceforge.net                            -->
+<!-- Web: http://sourceforge.net/projects/isee                              -->
+<!--                                                                        -->
+<!-- For a list of contributors see the file AUTHORS.                       -->
+<!--                                                                        -->
+<!-- ISEE is free software; you can redistribute it and/or modify it under  -->
+<!-- the terms of the GNU General Public License as published by the Free   -->
+<!-- Software Foundation; either version 2 of the License, or (at your      -->
+<!-- option) any later version.                                             -->
+<!--                                                                        -->
+<!-- ISEE is distributed in the hope that it will be useful, but WITHOUT    -->
+<!-- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or  -->
+<!-- FITNESS FOR A PARTICULAR PURPOSE.                                      -->
+<!--                                                                        -->
+<!-- You should have received a copy of the GNU General Public License      -->
+<!-- along with ISEE in the file COPYING; if not, write to the Free         -->
+<!-- Software Foundation, Inc., 51 Franklin St, Fifth Floor,                -->
+<!-- Boston, MA 02110-1301, USA                                             -->
+<!--                                                                        -->
+<!-- ***********************************************************************-->
+
+
+<!--
+<!ENTITY %Net.dtd SYSTEM "Net.dtd">
+%Net;
+-->
+<!ELEMENT Evolution (Generation+)>
+<!ELEMENT Generation (Population+)>
+<!ATTLIST Generation
+          Index       CDATA #REQUIRED>
+
+<!ELEMENT Population (Comment?,EvoObject+)>
+<!ATTLIST Population
+          Name            CDATA #REQUIRED
+          Index           CDATA #REQUIRED>
+
+<!ELEMENT Comment (#PCDATA)>
+<!ELEMENT EvoObject (Net+)>
+<!ATTLIST EvoObject 
+          Index           CDATA #REQUIRED
+          OutPerf         CDATA #REQUIRED
+          SysPerf         CDATA #REQUIRED
+          Age             CDATA #REQUIRED
+          PIN             CDATA #IMPLIED
+          ParentsPIN      CDATA #IMPLIED>
+
+<!ELEMENT Net (Neuron+)>
+<!ATTLIST Net
+    Transferfunction      CDATA #REQUIRED
+    SynapseMode           CDATA #REQUIRED
+    OutputPerformance     CDATA #REQUIRED
+    SystemPerformance     CDATA #REQUIRED>
+
+<!ELEMENT Neuron (Synapse*)>
+<!ATTLIST Neuron
+      Bias                CDATA #REQUIRED
+      TransmitterLevel    CDATA #IMPLIED
+      ReceptorLevel       CDATA #IMPLIED
+      Layer               CDATA #REQUIRED
+      Process             CDATA #REQUIRED>
+
+<!ELEMENT Synapse EMPTY>
+<!ATTLIST Synapse
+      Source              CDATA #REQUIRED
+      Strength            CDATA #REQUIRED
+      Process             CDATA #REQUIRED>
+
+
+<!--
+<Evolution>
+  <Generation Index="0">
+    <Population Name="Martin" Index="0">
+       <Comment>
+	Super Predator
+       </Comment>
+       <EvoObject OutPerf="1.0" SysPerf="0.43" Age="1">
+         <Net>
+         </Net>
+       </EvoObject>
+       <EvoObject OutPerf="0.9" SysPerf="0.4" Age="1">
+         <Net>
+         </Net>
+       </EvoObject>
+       <EvoObject OutPerf="2.0" SysPerf="0.3" Age="1">
+         <Net>
+         </Net>
+       </EvoObject>
+    </Population>
+    <Population Name="Tine" Index="1">
+       <Comment>
+	Super Prey
+       </Comment>
+       <EvoObject OutPerf="1.0" SysPerf="1.57" Age="1">
+         <Net>
+         </Net>
+       </EvoObject>
+       <EvoObject OutPerf="1.1" SysPerf="1.6" Age="1">
+         <Net>
+         </Net>
+       </EvoObject>
+       <EvoObject OutPerf="0.0" SysPerf="1.7" Age="1">
+         <Net>
+         </Net>
+       </EvoObject>
+    </Population>
+  </Generation>
+  <Generation Index="1">
+   ...
+  </Generation>
+
+</Evolution>
+-->
+
+
+
+
+
+
+
+

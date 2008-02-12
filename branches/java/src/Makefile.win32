@@ -1,0 +1,177 @@
+#  *********************************************************************** *
+#                                                                          *
+#  This file is part of Integrated Structure Evolution Environment (ISEE). *
+#  Copyright (C) 2002-2007 Keyan Zahedi and Martin Huelse                  *
+#  All rights reserved.                                                    *
+#  Email: {keyan,aberys}@users.sourceforge.net                             *
+#  Web: http://sourceforge.net/projects/isee                               *
+#                                                                          *
+#  For a list of contributors see the file AUTHORS.                        *
+#                                                                          *
+#  ISEE is free software; you can redistribute it and/or modify it under   *
+#  the terms of the GNU General Public License as published by the Free    *
+#  Software Foundation; either version 2 of the License, or (at your       *
+#  option) any later version.                                              *
+#                                                                          *
+#  ISEE is distributed in the hope that it will be useful, but WITHOUT     *
+#  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or   *
+#  FITNESS FOR A PARTICULAR PURPOSE.                                       *
+#                                                                          *
+#  You should have received a copy of the GNU General Public License       *
+#  along with ISEE in the file COPYING; if not, write to the Free          *
+#  Software Foundation, Inc., 51 Franklin St, Fifth Floor,                 *
+#  Boston, MA 02110-1301, USA                                              *
+#                                                                          *
+#  *********************************************************************** *
+
+ 
+CP = ".;C:\\Program Files\\Java\\jdk1.5.0\\jre\\lib\\ext\\comm.jar;C:\\Program Files\\Java\\jdk1.5.0\\jre\\lib\\rt.jar;./packages/ledatastream.jar;./packages/kunststoff.jar;./packages/IEButton.jar;.;./packages/junit.jar;./packages/log4j-1.2.8.jar;./packages/epsgraphics.jar"
+
+JAVAC = jikes -nowarn -g 
+
+%.class : %.java
+	echo $(JAVAC) $<
+	$(JAVAC) -classpath $(CP) -O $<
+
+jfiles := $(shell find . -name "*.java")
+cfiles := $(shell find . -name "*.java" | sed s/.java/.class/ )
+
+PACKAGEDIR = ./packages
+
+PACKAGES := $(shell find . -type f -name "*.java" -print | sed 's,/[^/]*$$,,' | sort | uniq | cut -c3- | sed 's/\//./g')  
+
+BRIGHTWELLCLASSES = $(shell find brightwell -name "*.class")
+
+all: $(cfiles)
+
+help:
+	echo \\nchoose one of the options below:\\n
+	echo make all        - compile all *.java files in the tree
+	echo make touch      - touch all sources
+	echo make doc        - generates complete documentation in directory \
+	./doc
+	echo make clean     - removes "*.class" files
+	echo make linecount - displays source code line counts
+
+javadoc:
+	echo $(PACKAGES)
+	rm -rf ./doc 
+	mkdir ./doc 
+	javadoc -sourcepath .:./Hinton/Executive/FitnessFunctions -link http://java.sun.com/j2se/1.4/docs/api -author -d ./doc $(PACKAGES) . 
+
+
+touch:
+	find . -name "*.java" -exec touch {} \;
+
+clean:
+	echo rm $(cfiles)
+	find . -name "*.class" -exec rm {} \;
+	find . -name "*~" -exec rm {} \;
+	find . -name "#*#" -exec rm {} \;	
+
+linecount:
+	find . -name "*.java" | xargs wc -l
+
+bz2tar:
+	rm -rf doc
+	tar -c * -jf ../projects.bz2.tar
+
+tgz:
+	rm -rf doc
+	tar -c * -zf ../projects.tgz
+
+commit:
+	cvs commit
+#	cvs commit Hinton
+#	cvs commit NetConverter
+#	cvs commit JSalamander
+#	cvs commit indy/util
+#	cvs commit packages
+#	cvs commit Moreton
+	
+update:
+	cvs update
+#	cvs update Hinton
+#	cvs update NetConverter
+#	cvs update JSalamander
+#	cvs update indy/util
+#	cvs update packages
+#	cvs update Moreton
+
+
+jar:
+
+	jar cvfm $(PACKAGEDIR)/hinton.jar Hinton/MANIFEST.MF Hinton/*.class \
+						 Hinton/Ambassador/*.class \
+						 Hinton/Ambassador/Robots/*.class \
+						 Hinton/Ambassador/Simulators/*.class \
+						 Hinton/GUI/*.class \
+						 Hinton/GUI/*.gif \
+						 Hinton/Broker/*.class \
+						 Hinton/IO/*.class \
+             Hinton/Executive/*.class \
+             Hinton/Executive/FitnessFunctions/*.class \
+						 indy/util/*.class \
+						 indy/io/*.class \
+						 indy/net/*.class \
+						 Cholsey/*.class \
+						 AddOn/Tables/*.class \
+             packages/ledatastream.jar
+
+	jar cvfM $(PACKAGEDIR)/brightwell.jar brightwell/MANIFEST.MF \
+							$(BRIGHTWELLCLASSES)
+
+	jar cvfM $(PACKAGEDIR)/indy.jar indy/util/*.class \
+														indy/io/*.class\
+														indy/net/*.class
+
+	jar cvfM $(PACKAGEDIR)/cholsey.jar Cholsey/*.class
+
+	jar cvfm $(PACKAGEDIR)/jsalamander.jar JSalamander/MANIFEST.MF \
+														JSalamander/*.class\
+														indy/net/DataGramCommunication.class
+
+	jar cvfm $(PACKAGEDIR)/netConverter.jar NetConverter/MANIFEST.MF \
+														NetConverter/*.class \
+                            Cholsey/*.class
+
+
+	jar cvfm $(PACKAGEDIR)/osci.jar oscillator/MANIFEST.MF \
+														oscillator/*.class \
+                            Cholsey/*.class
+
+	jar cvfm $(PACKAGEDIR)/dynamics.jar Moreton/MANIFEST.MF \
+														Moreton/*.class \
+                            Moreton/GUI/*.class \
+                            Moreton/Analyser/*.class \
+														Cholsey/*.class \
+														indy/io/XMLHandler.class \
+														indy/util/*.class
+
+	jar cvfm $(PACKAGEDIR)/evosun.jar Evolution/MANIFEST.MF \
+														Evolution/*.class \
+														Cholsey/*.class \
+														indy/io/*.class \
+														indy/util/*.class\
+														indy/net/*.class
+
+	jar cvfm $(PACKAGEDIR)/polebalancer.jar Evolution/MANIFEST_POLE.MF \
+														Evolution/*.class \
+														Cholsey/*.class \
+														indy/io/*.class \
+														indy/net/*.class \
+														indy/util/*.class
+
+
+	
+.SILENT:
+
+
+
+
+
+
+
+
+
+
