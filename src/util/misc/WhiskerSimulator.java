@@ -1,0 +1,517 @@
+/* *********************************************************************** *
+ *                                                                         *
+ * This file is part of Integrated Structure Evolution Environment (ISEE). *
+ * Copyright (C) 2002-2007 Keyan Zahedi and Martin Huelse                  *
+ * All rights reserved.                                                    *
+ * Email: {keyan,aberys}@users.sourceforge.net                             *
+ * Web: http://sourceforge.net/projects/isee                               *
+ *                                                                         *
+ * For a list of contributors see the file AUTHORS.                        *
+ *                                                                         *
+ * ISEE is free software; you can redistribute it and/or modify it under   *
+ * the terms of the GNU General Public License as published by the Free    *
+ * Software Foundation; either version 2 of the License, or (at your       *
+ * option) any later version.                                              *
+ *                                                                         *
+ * ISEE is distributed in the hope that it will be useful, but WITHOUT     *
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or   *
+ * FITNESS FOR A PARTICULAR PURPOSE.                                       *
+ *                                                                         *
+ * You should have received a copy of the GNU General Public License       *
+ * along with ISEE in the file COPYING; if not, write to the Free          *
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor,                 *
+ * Boston, MA 02110-1301, USA                                              *
+ *                                                                         *
+ * *********************************************************************** */
+
+
+package util.misc;
+
+
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Random;
+import java.util.StringTokenizer;
+
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
+import util.net.DataGramCommunication;
+import util.net.PacketBuffer;
+
+
+public class WhiskerSimulator extends JFrame implements ActionListener, Runnable
+{
+  private JTextField portInput          = new JTextField("7010",10);
+  private JTextField filenameInput      = new JTextField("txt/parity2_16values.txt",10);
+  private JTextField loadDataCountInput = new JTextField("16",10);
+  private JTextField testDataCountInput = new JTextField("10",10);
+  private JProgressBar progressBar      = new JProgressBar(0,5000);
+  private JButton      runButton        = new JButton("run");
+  private JButton      exitButton       = new JButton("exit");
+  private JLabel progressLabel          = new JLabel(" ");
+  private JLabel randomiseDataLabel     = new JLabel("randomise");
+  private JComboBox randomiseDataComboBox = new JComboBox();
+  private double[][] dataArray          = null;
+  private int[] randomIndices           = null;
+  private int nextRandomRow             = 0;
+
+  private Random random                 = new Random();
+
+  private int dataCount                 = 0;
+  private int columns                   = 0;
+
+  private DataGramCommunication com = new
+      DataGramCommunication(DataGramCommunication.SERVER);
+  private DataInputStream in = null;
+  private DataOutputStream out = null;
+  private PacketBuffer pbuf = new PacketBuffer();
+
+  private final static int COMMAND_GET_DATA = 0;
+  private final static int COMMAND_RESET = 1;
+  private final static int COMMAND_SET_POSITION = 2;
+  // for binary checks use 2^n
+  private final static int COMMAND_ROBOT_OK               = 3;
+  private final static int COMMAND_ROBOT_BUMPED           = 4;
+  private final static int COMMAND_NEXT_TRY               = 5;
+
+
+
+
+  public WhiskerSimulator()
+  {
+    super("WhiskerSimulator");
+    int row = -1;
+
+    progressBar.setMinimumSize(new Dimension(200,20));
+    JLabel portLabel = new JLabel("Port");
+    JLabel filenameLabel = new JLabel("Filename");
+    JLabel loadDataCountLabel = new JLabel("# of data");
+    JLabel testDataCountLabel = new JLabel("# of tests");
+
+    randomiseDataComboBox.addItem("yes");
+    randomiseDataComboBox.addItem("no");
+
+    GridBagLayout gblInput = new GridBagLayout();
+    GridBagLayout gblProgress = new GridBagLayout();
+    JPanel inputPanel = new JPanel();
+    JPanel progressPanel = new JPanel();
+    JPanel panel = new JPanel();
+    panel.setLayout(new GridLayout(2,0));
+    inputPanel.setLayout(gblInput);
+    progressPanel.setLayout(gblProgress);
+    panel.add(inputPanel);
+    panel.add(progressPanel);
+
+
+    // port row
+    GridBagConstraints portLabelConstraints = 
+      new GridBagConstraints(0, ++row, 1, 1, 0, 0, GridBagConstraints.WEST,
+          GridBagConstraints.NONE, new Insets(5,5,5,5),5,5);
+
+    GridBagConstraints portInputConstraints = 
+      new GridBagConstraints(1, row, 1, 1, 0, 0, GridBagConstraints.WEST,
+          GridBagConstraints.NONE, new Insets(5,5,5,5),5,5);
+
+    // port row
+    gblInput.setConstraints(portInput, portInputConstraints);
+    gblInput.setConstraints(portLabel, portLabelConstraints);
+
+    inputPanel.add(portLabel);
+    inputPanel.add(portInput);
+
+
+    // filename row
+    GridBagConstraints filenameLabelConstraints = 
+      new GridBagConstraints(0, ++row, 1, 1, 0, 0, GridBagConstraints.WEST,
+          GridBagConstraints.NONE, new Insets(5,5,5,5),5,5);
+
+    GridBagConstraints filenameInputConstraints = 
+      new GridBagConstraints(1, row, 1, 1, 0, 0, GridBagConstraints.WEST,
+          GridBagConstraints.NONE, new Insets(5,5,5,5),5,5);
+
+    // filename row
+    gblInput.setConstraints(filenameInput, filenameInputConstraints);
+    gblInput.setConstraints(filenameLabel, filenameLabelConstraints);
+
+    inputPanel.add(filenameLabel);
+    inputPanel.add(filenameInput);
+
+    // loadDataCount row
+    GridBagConstraints loadDataCountLabelConstraints = 
+      new GridBagConstraints(0, ++row, 1, 1, 0, 0, GridBagConstraints.WEST,
+          GridBagConstraints.NONE, new Insets(5,5,5,5),5,5);
+
+    GridBagConstraints loadDataCountInputConstraints = 
+      new GridBagConstraints(1, row, 1, 1, 0, 0, GridBagConstraints.WEST,
+          GridBagConstraints.NONE, new Insets(5,5,5,5),5,5);
+
+    // loadDataCount row
+    gblInput.setConstraints(loadDataCountInput, loadDataCountInputConstraints);
+    gblInput.setConstraints(loadDataCountLabel, loadDataCountLabelConstraints);
+
+    inputPanel.add(loadDataCountLabel);
+    inputPanel.add(loadDataCountInput);
+
+    // testDataCount row
+    GridBagConstraints testDataCountLabelConstraints = 
+      new GridBagConstraints(0, ++row, 1, 1, 0, 0, GridBagConstraints.WEST,
+          GridBagConstraints.NONE, new Insets(5,5,5,5),5,5);
+
+    GridBagConstraints testDataCountInputConstraints = 
+      new GridBagConstraints(1, row, 1, 1, 0, 0, GridBagConstraints.WEST,
+          GridBagConstraints.NONE, new Insets(5,5,5,5),5,5);
+
+    // testDataCount row
+    gblInput.setConstraints(testDataCountInput, testDataCountInputConstraints);
+    gblInput.setConstraints(testDataCountLabel, testDataCountLabelConstraints);
+
+    inputPanel.add(testDataCountLabel);
+    inputPanel.add(testDataCountInput);
+
+    // randomiseData row
+    GridBagConstraints randomiseDataLabelConstraints = 
+      new GridBagConstraints(0, ++row, 1, 1, 0, 0, GridBagConstraints.WEST,
+          GridBagConstraints.NONE, new Insets(5,5,5,5),5,5);
+
+    GridBagConstraints randomiseDataComboBoxConstraints = 
+      new GridBagConstraints(1, row, 1, 1, 0, 0, GridBagConstraints.WEST,
+          GridBagConstraints.NONE, new Insets(5,5,5,5),5,5);
+
+
+    gblInput.setConstraints(randomiseDataComboBox, randomiseDataComboBoxConstraints);
+    gblInput.setConstraints(randomiseDataLabel, randomiseDataLabelConstraints);
+
+    inputPanel.add(randomiseDataLabel);
+    inputPanel.add(randomiseDataComboBox);
+
+
+    // progressLabel row
+    GridBagConstraints progressLabelConstraints = 
+      new GridBagConstraints(0, ++row, 2, 1, 0, 0, GridBagConstraints.CENTER,
+          GridBagConstraints.NONE, new Insets(5,5,5,5),5,5);
+
+    gblProgress.setConstraints(progressLabel, progressLabelConstraints);
+
+    progressPanel.add(progressLabel);
+
+    // progressBar row
+    GridBagConstraints progressBarConstraints = 
+      new GridBagConstraints(0, ++row, 2, 1, 0, 0, GridBagConstraints.CENTER,
+          GridBagConstraints.NONE, new Insets(5,5,5,5),5,5);
+
+    gblProgress.setConstraints(progressBar, progressBarConstraints);
+
+    progressPanel.add(progressBar);
+
+    // runButton row
+    GridBagConstraints exitButtonConstraints = 
+      new GridBagConstraints(1, ++row, 1, 1, 0, 0, GridBagConstraints.EAST,
+          GridBagConstraints.NONE, new Insets(5,5,5,5),5,5);
+
+    GridBagConstraints runButtonConstraints = 
+      new GridBagConstraints(0, row, 1, 1, 0, 0, GridBagConstraints.EAST,
+          GridBagConstraints.NONE, new Insets(5,5,5,5),5,5);
+
+    gblProgress.setConstraints(runButton, runButtonConstraints);
+    gblProgress.setConstraints(exitButton, exitButtonConstraints);
+
+    runButton.addActionListener(this);
+    exitButton.addActionListener(this);
+
+    progressPanel.add(runButton);
+    progressPanel.add(exitButton);
+
+
+    setContentPane(panel);
+    setSize(getMinimumSize());
+
+  }
+
+  public void actionPerformed(ActionEvent e)
+  {
+    if(e.getSource() == runButton)
+    {
+      progressLabel.setText("Loading file ...");
+      (new Thread(this)).start();
+    }
+    if(e.getSource() == exitButton)
+    {
+      System.exit(0);
+    }
+  }
+
+
+  public void connect()
+  {
+    com.setPort(Integer.parseInt(portInput.getText()));
+    progressLabel.setText("Waiting for Hinton...");
+    com.initConnection();
+    progressLabel.setText("Done ...");
+  }
+
+
+
+  public void setRandomNumbers()
+  {
+    int randomNumber = Integer.parseInt(testDataCountInput.getText());
+    int randomMaxNumber = Integer.parseInt(loadDataCountInput.getText());
+    randomIndices = new int[randomNumber];
+    if(randomiseDataComboBox.getSelectedIndex() == 0)
+    {
+      for(int i=0; i<randomNumber; i++)
+      {
+        randomIndices[i] = random.nextInt(randomMaxNumber);
+        System.out.println("Random number " + i + ": " + randomIndices[i]);
+      }
+    }
+    else
+    {
+      for(int i=0;i<randomNumber;i++)
+      {
+        randomIndices[i] = i % randomMaxNumber;
+        System.out.println("Random number " + i + ": " + randomIndices[i]);
+      }
+    }
+  }
+
+  public double[] getNextRow()
+  {
+    return dataArray[randomIndices[nextRandomRow++]];
+  }
+
+  public void evaluate()
+  {
+    nextRandomRow = 0;
+    progressBar.setMaximum(randomIndices.length);
+    progressLabel.setText("Evaluating ...");
+    progressBar.setStringPainted(true);
+    for(int i=0;i<randomIndices.length;i++)
+    {
+      progressBar.setValue(i);
+      double[] tmp = getNextRow();
+    }
+  }
+
+  public void communicate()
+  {
+    int command = 0;
+    progressLabel.setText("Communication running ...");
+
+    try
+    {
+      pbuf.resetBuf();
+      com.readPacketBuffer(pbuf);
+
+      command = pbuf.readInt();
+
+      switch(command)
+      {
+        case COMMAND_SET_POSITION:
+          //System.out.println("Recv: COMMAND_SET_POSITION\n");
+          setRandomNumbers();
+          nextRandomRow = 0;
+          break;
+        case COMMAND_RESET:
+          //System.out.println("Recv: COMMAND_RESET\n");
+          nextRandomRow = 0;
+          break;
+        case COMMAND_GET_DATA:
+          //System.out.println("Recv: COMMAND_GET_DATA :\n" + nextRandomRow);
+          double row[] = null;
+          try
+          {
+            row = getNextRow();
+          }
+          catch (Exception e)
+          {
+            e.printStackTrace();
+            System.out.println("nextRandomRow " + nextRandomRow);
+          }
+          pbuf.resetBuf();
+//  Inputwerte aus dem Inputfile
+          pbuf.writeFloat((float)row[1]);  //xsoll
+          pbuf.writeFloat((float)row[4]);  //dxsoll_dt
+          pbuf.writeFloat((float)row[5]);  //d2xsoll_dt2
+          pbuf.writeFloat((float)row[6]);  //ysoll
+          pbuf.writeFloat((float)row[9]);   //dysoll_dt
+          pbuf.writeFloat((float)row[10]);  //d2ysoll_dt2
+          pbuf.writeFloat((float)row[11]);  //zsoll
+          pbuf.writeFloat((float)row[14]);  //dzsoll_dt
+          pbuf.writeFloat((float)row[15]);  //d2zsoll_dt2
+          pbuf.writeFloat((float)row[16]);  //asoll
+          pbuf.writeFloat((float)row[19]);  //dasoll_dt
+          pbuf.writeFloat((float)row[20]);  //d2asoll_dt2
+          pbuf.writeFloat((float)row[21]);  //bsoll
+          pbuf.writeFloat((float)row[24]);  //dbsoll_dt
+          pbuf.writeFloat((float)row[25]);  //d2bsoll_dt2
+          pbuf.writeFloat((float)row[26]);  //csoll
+          pbuf.writeFloat((float)row[29]);  //dcsoll_dt
+          pbuf.writeFloat((float)row[30]);  //d2csoll_dt2
+          pbuf.writeFloat((float)row[31]);  //a1
+          pbuf.writeFloat((float)row[32]);  //da1_dt
+          pbuf.writeFloat((float)row[33]);  //d2a1_dt2
+          pbuf.writeFloat((float)row[34]);  //a2
+          pbuf.writeFloat((float)row[35]);  //da2_dt
+          pbuf.writeFloat((float)row[36]);  //d2a2_dt2
+          pbuf.writeFloat((float)row[37]);  //a3
+          pbuf.writeFloat((float)row[38]);  //da3_dt
+          pbuf.writeFloat((float)row[39]);  //d2a3_dt2
+          pbuf.writeFloat((float)row[40]);  //a4
+          pbuf.writeFloat((float)row[41]);  //da4_dt
+          pbuf.writeFloat((float)row[42]);  //d2a4_dt2
+          pbuf.writeFloat((float)row[43]);  //a5
+          pbuf.writeFloat((float)row[44]);  //da5_dt
+          pbuf.writeFloat((float)row[45]);  //d2a5_dt2
+          pbuf.writeFloat((float)row[46]);  //a6
+          pbuf.writeFloat((float)row[47]);  //da6_dt
+          pbuf.writeFloat((float)row[48]);  //d2a6_dt2
+          com.writePacketBuffer(pbuf);
+          break;
+      }
+    }
+    catch (IOException e)
+    {
+      e.printStackTrace();
+    }
+  }
+
+  public void run()
+  {
+    loadFile(filenameInput.getText(),
+        Integer.parseInt(loadDataCountInput.getText()));
+    setRandomNumbers();
+    connect();
+    boolean keepOnRunning = true;
+    while(keepOnRunning)
+    {
+      communicate();
+    }
+    //evaluate();
+  }
+
+  public void printTestLine(int index)
+  {
+    System.out.println("********************");
+    for(int i=0; i<columns; i++)
+    {
+      System.out.println(dataArray[index][i]);
+    }
+    System.out.println("********************");
+  }
+
+  public void loadFile(String filename, int lines)
+  {
+    progressBar.setStringPainted(true);
+    dataCount = Integer.parseInt(loadDataCountInput.getText());
+    double value = 0;
+    int lineCount = 0;
+    progressLabel.setText("Loading file ... ");
+    progressBar.setMinimum(0);
+    progressBar.setMaximum(dataCount);
+    try 
+    {
+      BufferedReader in = new BufferedReader(new
+          FileReader(new File(filename)));
+      String firstLine = in.readLine();
+      StringTokenizer st = new StringTokenizer(firstLine,"\t");
+      columns = st.countTokens();
+      dataArray = new double[dataCount][columns];
+
+      for(int i=0;i<columns;i++)
+      {
+        value = Double.parseDouble(st.nextToken());
+        dataArray[lineCount][i] = value;
+      }
+      String lineString = null;
+
+      for(int i=1;i<dataCount;i++)
+      {
+        lineString = in.readLine();
+        st = new StringTokenizer(lineString,"\t");
+        for(int j=0;j<columns;j++)
+        {
+          value = Double.parseDouble(st.nextToken());
+          dataArray[i][j] = value;
+        }
+        progressBar.setValue(i);
+      }
+
+    }
+    catch(Exception e)
+    {
+      e.printStackTrace();
+    }
+  }
+
+  public static void main(String argv[])
+  {
+
+    JDialog.setDefaultLookAndFeelDecorated(true);
+    JFrame.setDefaultLookAndFeelDecorated(true);
+    Toolkit.getDefaultToolkit().setDynamicLayout(true);
+    System.setProperty("sun.awt.noerasebackground","true");
+
+    try {
+      javax.swing.plaf.metal.MetalLookAndFeel.setCurrentTheme( 
+          new javax.swing.plaf.metal.DefaultMetalTheme());
+      UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
+    }  
+    catch ( UnsupportedLookAndFeelException e ) {
+      System.out.println (
+          "Metal Look & Feel not supported on this platform. \nProgram Terminated");
+      System.exit(0);
+    }
+    catch ( IllegalAccessException e ) {
+      System.out.println (
+          "Metal Look & Feel could not be accessed. \nProgram Terminated");
+      System.exit(0);
+    }
+    catch ( ClassNotFoundException e ) {
+      System.out.println (
+          "Metal Look & Feel could not found. \nProgram Terminated");
+      System.exit(0);
+    }   
+    catch ( InstantiationException e ) {
+      System.out.println (
+          "Metal Look & Feel could not be instantiated. \nProgram Terminated");
+      System.exit(0);
+    }
+    catch ( Exception e ) {
+      System.out.println ("Unexpected error. \nProgram Terminated");
+      e.printStackTrace();
+      System.exit(0);
+    }
+
+    WhiskerSimulator es = new WhiskerSimulator();
+    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); 
+    Dimension esSize = es.getSize();
+    int x = (int)(screenSize.getWidth()/2.0d);
+    int y  = (int)(screenSize.getHeight()/2.0d);
+    x = x - (int)(esSize.getWidth()/2.0d);
+    y = y - (int)(esSize.getHeight()/2.0d);
+    es.setLocation(x,y);
+    es.setVisible(true);
+  }
+}
+

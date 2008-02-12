@@ -1,0 +1,73 @@
+#  *********************************************************************** *
+#                                                                          *
+#  This file is part of Integrated Structure Evolution Environment (ISEE). *
+#  Copyright (C) 2002-2007 Keyan Zahedi and Martin Huelse                  *
+#  All rights reserved.                                                    *
+#  Email: {keyan,aberys}@users.sourceforge.net                             *
+#  Web: http://sourceforge.net/projects/isee                               *
+#                                                                          *
+#  For a list of contributors see the file AUTHORS.                        *
+#                                                                          *
+#  ISEE is free software; you can redistribute it and/or modify it under   *
+#  the terms of the GNU General Public License as published by the Free    *
+#  Software Foundation; either version 2 of the License, or (at your       *
+#  option) any later version.                                              *
+#                                                                          *
+#  ISEE is distributed in the hope that it will be useful, but WITHOUT     *
+#  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or   *
+#  FITNESS FOR A PARTICULAR PURPOSE.                                       *
+#                                                                          *
+#  You should have received a copy of the GNU General Public License       *
+#  along with ISEE in the file COPYING; if not, write to the Free          *
+#  Software Foundation, Inc., 51 Franklin St, Fifth Floor,                 *
+#  Boston, MA 02110-1301, USA                                              *
+#                                                                          *
+#  *********************************************************************** *
+
+CP := $(CLASSPATH):./hinton.jar:./evosun.jar:./brightwell.jar
+
+JAVAC=jikes -g -nowarn
+
+%.class : %.java
+	echo $(JAVAC) $<
+	$(JAVAC) -classpath $(CP) -O $<
+
+JAVAFILES := $(shell find . -name "*.java")
+CLASSFILES := $(shell find . -name "*.java" | sed s/.java/.class/ )
+
+PACKAGEDIR := ./packages
+
+PACKAGES := $(shell find . -type f -name "*.java" -print | sed 's,/[^/]*$$,,' | sort | uniq | cut -c3- | sed 's/\//./g')  
+################################################################################
+### make rules
+################################################################################
+
+
+all: $(CLASSFILES)
+
+help:
+	echo ""
+	echo "choose one of the options below:"
+	echo "   make all        - compile all *.java files in the tree"
+	echo "   make clean     - removes "*.class" files"
+	echo ""
+
+clean:
+	echo rm $(CLASSFILES)
+	find . -name "*.class" -exec rm {} \;
+	find . -name "*~" -exec rm {} \;
+	find . -name "#*#" -exec rm {} \;	
+
+
+	
+.SILENT:
+
+
+
+
+
+
+
+
+
+

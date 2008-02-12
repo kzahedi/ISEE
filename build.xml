@@ -1,0 +1,692 @@
+<project name="ISEE" default="compile" basedir=".">
+<!-- ***********************************************************************-->
+<!--                                                                        -->
+<!-- This file is part of Integrated Structure Evolution Environment (ISEE).-->
+<!-- Copyright (C) 2002-2007 Keyan Zahedi and Martin Huelse                 -->
+<!-- All rights reserved.                                                   -->
+<!-- Email: {keyan,aberys}@users.sourceforge.net                            -->
+<!-- Web: http://sourceforge.net/projects/isee                              -->
+<!--                                                                        -->
+<!-- For a list of contributors see the file AUTHORS.                       -->
+<!--                                                                        -->
+<!-- ISEE is free software; you can redistribute it and/or modify it under  -->
+<!-- the terms of the GNU General Public License as published by the Free   -->
+<!-- Software Foundation; either version 2 of the License, or (at your      -->
+<!-- option) any later version.                                             -->
+<!--                                                                        -->
+<!-- ISEE is distributed in the hope that it will be useful, but WITHOUT    -->
+<!-- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or  -->
+<!-- FITNESS FOR A PARTICULAR PURPOSE.                                      -->
+<!--                                                                        -->
+<!-- You should have received a copy of the GNU General Public License      -->
+<!-- along with ISEE in the file COPYING; if not, write to the Free         -->
+<!-- Software Foundation, Inc., 51 Franklin St, Fifth Floor,                -->
+<!-- Boston, MA 02110-1301, USA                                             -->
+<!--                                                                        -->
+<!-- ***********************************************************************-->
+
+
+  <description>
+    help:
+        this help
+
+    clean : 
+        remove build, dist, test, release directory, and swap files
+
+    init : 
+        make build, dist, test, release directory, timestap, and copy
+        image files to build directory
+
+    compile : 
+        compile files to build directory
+
+    clean_compile : 
+        compile files to build directory, but call clean first
+
+    javadoc : 
+        create javadoc into release dir
+
+    distribute_all_docs:
+        call javadoc, zip it and move it to /tmp      
+
+    jar_files : 
+        create main ISSE jar files: evosun, hinton, reading, brightwell
+
+    all_jar_files : 
+        create all jar-files, also deprecated and less used ones
+
+    distribute : 
+        create ISEE-*.zip 
+
+    distribute_with_docs : 
+        create ISEE-*.zip without doc 
+
+   </description>
+
+
+<property name="target.jdk"                value="1.5"/>
+<property name="xml.name"                  value="xml"/>
+<property name="config.name"               value="cfg"/>
+<property name="release_info.name"         value="releaseinfo"/>
+<property name="dtd.name"                  value="dtd"/>
+<property name="lib.name"                  value="lib"/>
+<property name="src.name"                  value="src"/>
+<property name="build.name"                value="build"/>
+<property name="report.name"               value="report"/>
+<property name="release.name"              value="ISEE"/>
+<property name="dist.name"                 value="dist"/>
+<property name="test.name"                 value="test"/>
+<property name="doc.name"                  value="doc"/>
+<property name="javadoc.name"              value="javadoc"/>
+<property name="images.name"               value="images"/>
+
+<property name="compiledby"                value="${user.name}"/>
+<property name="compiledwith"              value="java                                             ${ant.java.version}"/>
+
+
+<property name="src.dir"                   location="${src.name}"/>
+<property name="config.dir"                location="${config.name}"/>
+<property name="release_info.dir"          location="${src.dir}"/>
+<property name="build.dir"                 location="${build.name}"/>
+<property name="lib.dir"                   location="${lib.name}"/>
+<property name="xml.dir"                   location="${src.dir}/${xml.name}"/>
+<property name="dtd.dir"                   location="${src.dir}/${dtd.name}"/>
+<property name="doc.dir"                   location="${doc.name}"/>
+<property name="images.dir"                location="${images.name}"/>
+<property name="dist.dir"                  location="${dist.name}"/>
+<property name="dist.report.dir"           location="${dist.name}/${report.name}"/>
+<property name="release.dir"               location="${release.name}"/>
+<property name="release.lib.dir"           location="${release.name}/${lib.name}"/>
+<property name="release.xml.dir"           location="${release.name}/${xml.name}"/>
+<property name="test.dir"                  location="${test.name}"/>
+<property name="test.lib.dir"              location="${test.name}/${lib.name}"/>
+<property name="test.report.dir"           location="${test.name}/${report.name}"/>
+<property name="test.report.html.dir"      location="${test.name}/${report.name}/html"/>
+<property name="javadoc.dir"               location="${release.dir}/${doc.name}/${javadoc.name}"/>
+
+
+
+
+<property name="release.dist.name"         value="${release.dir}"/>
+
+<property name="class_string"              value="lib/log4j-1.2.8.jar lib/epsgraphics.jar lib/crimson-1.1.3.jar lib/JSAP-2.1.jar"/>
+<property name="evosun_jar_name"           value="evosun"/>
+<property name="evosun_mainclass"          value="Evolution.EvoSun"/>
+
+<property name="reading_jar_name"          value="reading"/>
+<property name="reading_mainclass"         value="reading.ReadingMain"/>
+
+<property name="hinton_jar_name"           value="hinton"/>
+<property name="hinton_mainclass"          value="hinton.HintonMain"/>
+
+<property name="brightwell_jar_name"       value="brightwell"/>
+<property name="brightwell_mainclass"      value="brightwell.BrightwellMain"/>
+
+<property name="newbury_jar_name"          value="newbury"/>
+<property name="newbury_mainclass"         value="newbury.NewBury"/>
+
+<property name="beaumys_jar_name"          value="beaumys"/>
+<property name="beaumys_mainclass"         value="beaumys.Beaumys"/>
+
+
+  <!-- **********************************************************  -->
+  <!-- Tasks Defs                                                  --> 
+  <!-- **********************************************************  -->
+
+
+  <taskdef name="svninfoproperties"
+    classname="com.jwhitlock.ant.taskdefs.SvnInfoProperties"
+    classpath="${lib.dir}/svninfo_task.jar" />
+
+
+  <taskdef 
+   name="jreleaseinfo" 
+   classname="ch.oscg.jreleaseinfo.anttask.JReleaseInfoAntTask"
+   classpath="${lib.dir}/jreleaseinfo-1.3.0.jar"/>
+
+
+
+  <!-- **********************************************************  -->
+  <!-- Help Tasks                                                  -->
+  <!-- **********************************************************  -->
+
+  <target name="help" description="Display detailed usage information">
+    <echo>    help:</echo>
+    <echo>        this help</echo>
+    <echo/>
+    <echo>    clean : </echo>
+    <echo>        remove build, dist, test, release directory, and swap files</echo>
+    <echo/>
+    <echo>    init : </echo>
+    <echo>        make build, dist, test, release directory, timestap, and copy</echo>
+    <echo>        image files to build directory</echo>
+    <echo>    compile : </echo>
+    <echo>        compile files to build directory</echo>
+    <echo/>
+    <echo>    clean_compile : </echo>
+    <echo>        compile files to build directory, but call clean first</echo>
+    <echo/>
+    <echo>    test : </echo>
+    <echo>        call all _TestSuite.class files</echo>
+    <echo/>
+    <echo>    javadoc : </echo>
+    <echo>        create javadoc into release dir</echo>
+    <echo/>
+    <echo>    jar_files : </echo>
+    <echo>        create main ISSE jar files: evosun, hinton, reading, brightwell</echo>
+    <echo/>
+    <echo>    all_jar_files : </echo>
+    <echo>        create all jar-files, also deprecated and less used ones</echo>
+    <echo/>
+    <echo>    distribute : </echo>
+    <echo>        create ISEE-*.zip without doc </echo>
+    <echo/>
+    <echo>    distribute_with_docs : </echo>
+    <echo>        create ISEE-*.zip without doc </echo>
+  </target>
+
+  <!-- **********************************************************  -->
+  <!-- Init Tasks                                                  -->
+  <!-- **********************************************************  -->
+
+  <target name="clean" description="clean up">
+    <delete dir="${dist.dir}"/>
+    <delete dir="${test.dir}"/>
+    <delete dir="${build.dir}"/>
+    <delete dir="${release.dir}"/>
+    <delete>
+      <fileset dir="." includes="**/.*.sw*"/>
+    </delete>
+  </target>
+
+
+  <target name="init">
+    <mkdir dir="${build.dir}"/>
+    <mkdir dir="${build.dir}/${lib.name}"/>
+    <mkdir dir="${dist.dir}"/>
+    <mkdir dir="${dist.report.dir}"/>
+    <mkdir dir="${build.dir}/Evolution/images"/>
+    <mkdir dir="${build.dir}/Evolution/Pole/images"/>
+    <mkdir dir="${build.dir}/pole/images"/>
+    <mkdir dir="${build.dir}/hinton/gui"/>
+    <mkdir dir="${build.dir}/hinton/analyser"/>
+    <mkdir dir="${build.dir}/${config.name}"/>
+
+    <copy todir="${build.dir}/hinton/gui">
+      <fileset dir="${src.dir}/hinton/gui" includes="*.gif"/>
+    </copy>
+
+    <copy todir="${build.dir}/${config.name}">
+      <fileset dir="${src.dir}/${config.name}" includes="*.cfg"/>
+    </copy>
+
+
+    <copy todir="${build.dir}/hinton/analyser">
+      <fileset dir="${src.dir}/hinton/analyser" includes="*.gif"/>
+    </copy>
+
+    <copy todir="${build.dir}/Evolution/images">
+      <fileset dir="${src.dir}/Evolution/images" includes="*.gif"/>
+    </copy>
+
+    <copy todir="${build.dir}/Evolution/Pole/images">
+      <fileset dir="${src.dir}/Evolution/Pole/images" includes="*.gif"/>
+    </copy>
+
+    <delete dir="${release_info.dir}/{release_info.name}"/>
+
+    <!-- get svn properties -->
+    <!-- <svninfoproperties dir="." file="-r HEAD" verbose="true"/> -->
+
+    <tstamp/>
+  </target>
+
+  <!-- **********************************************************  -->
+  <!-- Release Task                                                -->
+  <!-- **********************************************************  -->
+
+  <target name="update_jreleaseinfo" depends="init">
+    <echo  message="creating JReleaseInfo File in ${src.dir}" />
+    <jreleaseinfo className="IseeReleaseInfo" 
+                  targetDir="${release_info.dir}"
+                  packageName="${release_info.name}"
+                  project="ISEE"
+                  version="1.3"
+                  withViewer="false" 
+                  buildNumFile="${release_info.dir}/buildnum.properties"
+                  buildNumProperty="buildnum">
+      <parameter name="CompiledBy"    type="String"   value="${compiledby}" />
+      <parameter name="CompiledWith"  type="String"   value="${compiledwith}" />
+      <parameter name="RevisionNum"   type="Integer" value="-1" /> 
+      <!--      <parameter name="RevisionNum"   type="Integer" value="${svn.info.rev}" /> -->
+    </jreleaseinfo>
+    <echo message="current build number: ${buildnum}" />
+    <echo message="compiled by         : ${compiledby}" />
+    <echo message="compiled with       : ${compiledwith}" />
+    <echo message="svn revision number : ${svn.info.rev}" />
+  </target>
+
+  <!-- **********************************************************  -->
+  <!-- Compile Tasks                                                  -->
+  <!-- **********************************************************  -->
+
+  <target name="compile" description="compile the files" depends="init,
+    update_jreleaseinfo">
+
+    <javac srcdir="${src.dir}" destdir="${build.dir}"
+           debug="on"
+           nowarn="yes"
+           source="${target.jdk}">
+
+           <!--<compilerarg value="-Xlint:unchecked"/>-->
+
+    </javac>
+
+    <copy todir="${build.dir}/${xml.name}">
+      <fileset dir="${xml.dir}"/>
+    </copy>
+
+    <copy todir="${build.dir}/${dtd.name}">
+      <fileset dir="${dtd.dir}"/>
+    </copy>
+
+    <copy todir="${build.dir}/${lib.name}">
+      <fileset dir="${lib.dir}"/>
+    </copy>
+
+  </target>
+
+  <target name="clean_compile" description="clean and compile"
+    depends="clean, compile"/>
+
+  <!-- **********************************************************  -->
+  <!-- Doc Tasks                                                  -->
+  <!-- **********************************************************  -->
+
+  <target name="javadoc" description="create javadoc">
+<!--     <splash showduration="0"/> -->
+    <javadoc destdir="${javadoc.dir}"
+             author="true"
+             version="true"
+             use="true"
+             windowtitle="ISEE API">
+
+      <packageset dir="${src.dir}" defaultexcludes="yes">
+        <include name="**" />
+        <exclude name="**/*Test*"/>
+      </packageset>
+
+      <classpath>
+        <fileset dir="${lib.dir}">
+          <include name="**/*.jar"/>
+        </fileset>
+      </classpath>
+
+      <doctitle><![CDATA[<h1>EOD</h1>]]></doctitle>
+      <bottom><![CDATA[<i>Copyright &#169; 2004 ISEE Group.  All Rights Reserved.</i>]]></bottom>
+      <tag name="todo" scope="all" description="To do:" />
+      <link offline="true" href="http://java.sun.com/products/jdk/1.2/docs/api/" packagelistLoc="C:\tmp"/>
+      <link href="http://developer.java.sun.com/developer/products/xml/docs/api/"/>
+    </javadoc>
+  </target>
+
+  <target name="distribute_all_docs" depends="init, javadoc">
+    <zip destfile="${release.dist.name}-${DSTAMP}-${svn.info.rev}-doc.zip">
+      <zipfileset dir="${release.dir}/doc" prefix="ISEE/doc"/>
+    </zip>
+    <move file="${release.dist.name}-${DSTAMP}-${svn.info.rev}-doc.zip" todir="/tmp"/>
+  </target>
+
+  <!-- **********************************************************  -->
+  <!-- Jar Tasks                                                  -->
+  <!-- **********************************************************  -->
+
+  <target name="newbury_jar" depends="init" description="generate newbury">
+    <jar jarfile="${dist.dir}/${newbury_jar_name}.jar">
+      <fileset dir="${build.dir}">
+        <include name="newbury/**/*.class"/>
+        <include name="cholsey/**/*.class"/>
+        <include name="util/**/*.class"/>
+        <include name="releaseinfo/*.class"/>
+      </fileset>
+      <manifest>
+        <attribute name="Built-By" value="${user.name}"/>
+        <attribute name="Main-Class" value="${newbury_mainclass}"/>
+        <attribute name="Class-Path"  value="${class_string}"/>
+      </manifest>
+    </jar>
+
+  </target>
+
+  <target name="beaumys_jar" depends="init" description="generate beaumys">
+    <jar jarfile="${dist.dir}/${beaumys_jar_name}.jar">
+      <fileset dir="${build.dir}">
+        <include name="beaumys/**/*.class"/>
+        <include name="cholsey/**/*.class"/>
+        <include name="util/io/*.class"/>
+        <include name="util/misc/*.class"/>
+        <include name="releaseinfo/*.class"/>
+      </fileset>
+      <manifest>
+        <attribute name="Built-By" value="${user.name}"/>
+        <attribute name="Main-Class" value="${beaumys_mainclass}"/>
+        <attribute name="Class-Path"  value="${class_string}"/>
+      </manifest>
+    </jar>
+
+  </target>
+
+
+
+  <target name="evosun_jar" depends="init" description="generate evosun jar">
+    <jar jarfile="${dist.dir}/${evosun_jar_name}.jar">
+      <fileset dir="${build.dir}">
+        <include name="Evolution/**/*.class"/>
+        <include name="cholsey/**/*.class"/>
+        <include name="util/**/*.class"/>
+        <include name="Evolution/**/*.gif"/>
+        <include name="releaseinfo/*.class"/>
+        <exclude name="**/LearningRule.class"/>
+      </fileset>
+      <manifest>
+        <attribute name="Built-By" value="${user.name}"/>
+        <attribute name="Main-Class" value="Evolution.EvoSun"/>
+        <attribute name="Class-Path"  value="${class_string} lib/jfreechart-1.0.0-rc1.jar"/>
+      </manifest>
+    </jar>
+
+  </target>
+
+  <target name="hinton_jar" depends="init" description="generate hinton jar">
+    <jar jarfile="${dist.dir}/${hinton_jar_name}.jar">
+      <fileset dir="${build.dir}">
+        <include name="hinton/**/*.class"/>
+        <include name="reading/**/*.class"/>
+        <include name="cholsey/**/*.class"/>
+        <include name="addon/tables/**/*.class"/>
+        <include name="addon/netconverter/**/*.class"/>
+        <include name="util/**/*.class"/>
+        <include name="Evolution/Random/Gauss.class"/>
+        <include name="releaseinfo/*.class"/>
+        <exclude name="hinton/ambassador/Robots/*.class"/>
+        <exclude name="hinton/simulators/*.class"/>
+        <exclude name="hinton/robots/*.class"/>
+        <exclude name="hinton/fitnessfunctions/*.class"/>
+        <exclude name="**/LearningRule.class"/>
+      </fileset>
+      <fileset dir="${src.dir}">
+        <include name="hinton/**/*.gif"/>
+        <include name="hinton/**/*.jpg"/>
+      </fileset>
+      <manifest>
+        <attribute name="Built-By" value="${user.name}"/>
+        <attribute name="Main-Class" value="hinton.HintonMain"/>
+        <attribute name="Class-Path" value="${class_string}"/>
+      </manifest>
+    </jar>
+
+  </target>
+
+  <target name="reading_jar" depends="init" description="generate evonsun jar">
+    <jar jarfile="${dist.dir}/${reading_jar_name}.jar">
+      <fileset dir="${build.dir}">
+        <include name="reading/**/*.class"/>
+        <include name="util/**/*.class"/>
+        <include name="cholsey/*.class"/>
+        <include name="releaseinfo/*.class"/>
+        <exclude name="**/LearningRule.class"/>
+      </fileset>
+      <manifest>
+        <attribute name="Built-By"   value="${user.name}"/>
+        <attribute name="Main-Class" value="${reading_mainclass}"/>
+        <attribute name="Class-Path"  value="${class_string}"/>
+      </manifest>
+    </jar>
+
+
+  </target>
+
+
+
+  <target name="brightwell_jar" depends="init" description="generate evonsun jar">
+    <jar jarfile="${dist.dir}/${brightwell_jar_name}.jar">
+      <fileset dir="${build.dir}">
+        <include name="brightwell/**/*.class"/>
+        <include name="hinton/analyser/toolkit/**/*.class"/>
+        <include name="util/**/*.class"/>
+        <include name="cholsey/**/*.class"/>
+        <include name="addon/tables/**/*.class"/>
+        <include name="addon/netconverter/**/*.class"/>
+        <include name="releaseinfo/*.class"/>
+        <exclude name="brightwell/tools/*.class"/>
+        <exclude name="brightwell/nets/*.class"/>
+        <exclude name="learningrules/*"/>
+        <exclude name="**/LearningRule.class"/>
+      </fileset>
+      <manifest>
+        <attribute name="Built-By"   value="${user.name}"/>
+        <attribute name="Main-Class" value="${brightwell_mainclass}"/>
+        <attribute name="Class-Path"  value="${class_string} lib/jfreechart-1.0.0-rc1.jar lib/jcommon-1.0.0.rc1.jar"/>
+      </manifest>
+    </jar>
+
+  </target>
+
+
+  <target name="jar_files" depends="reading_jar, hinton_jar, evosun_jar,
+                                          brightwell_jar,
+                                          newbury_jar,
+                                          beaumys_jar"/>
+
+
+  <target name="all_jar_files" depends="reading_jar, hinton_jar, evosun_jar,
+                                  brightwell_jar, 
+                                  newbury_jar"/>
+
+
+
+  <!-- **********************************************************  -->
+  <!-- Prepare Distribute Tasks                                    -->
+  <!-- **********************************************************  -->
+
+  <target name="prepare_distribute" depends="compile, jar_files"
+    description="move and pack stuff">
+
+    <mkdir dir="${release.dir}"/>
+    <mkdir dir="${release.lib.dir}"/>
+    <mkdir dir="${release.dir}/hinton/simulators"/>
+    <mkdir dir="${release.dir}/hinton/robots"/>
+    <mkdir dir="${release.dir}/hinton/fitnessfunctions"/>
+    <mkdir dir="${release.dir}/"/>
+    <mkdir dir="${release.dir}/simulator"/>
+    <mkdir dir="${release.dir}/robot"/>
+    <mkdir dir="${release.dir}/config/Moreton"/>
+    <mkdir dir="${release.dir}/xml/config/brightwell"/>
+    <mkdir dir="${release.dir}/xml/config/PuppetPlayer"/>
+    <mkdir dir="${release.dir}/dtd"/>
+    <mkdir dir="${release.dir}/brightwell"/>
+    <mkdir dir="${release.dir}/brightwell/nets"/>
+    <mkdir dir="${release.dir}/brightwell/tools"/>
+    <mkdir dir="${release.dir}/learningrules"/>
+    <mkdir dir="${release.dir}/cfg"/>
+
+    <copy file="${src.dir}/learningrules/Empty.java"
+          todir="${release.dir}/learningrules"/>
+
+    <copy file="${build.dir}/learningrules/Empty.class"
+          todir="${release.dir}/learningrules"/>
+
+    <copy file="${src.dir}/cfg/log4j.cfg"
+          todir="${release.dir}/cfg"/>
+
+    <copy file="${xml.dir}/simulator/nosimcom.xml"
+          todir="${release.xml.dir}/simulator"/>
+
+    <copy file="${xml.dir}/simulator/yars.xml"
+          todir="${release.xml.dir}/simulator"/>
+
+    <copy file="${xml.dir}/robot/norobcom.xml"
+          todir="${release.xml.dir}/robot"/>
+
+    <copy file="${dtd.dir}/SerialCom.dtd"
+          todir="${release.dir}/dtd"/>
+
+    <copy file="${dtd.dir}/SimCom.dtd"
+          todir="${release.dir}/dtd"/>
+
+    <copy todir="${release.dir}/hinton/simulators">
+      <fileset dir="${src.dir}/hinton/simulators" includes="*.java"/>
+    </copy>
+
+    <copy todir="${release.dir}/hinton/simulators">
+      <fileset dir="${build.dir}/hinton/simulators" includes="*.class"/>
+    </copy>
+
+    <copy todir="${release.dir}/xml/simulator">
+      <fileset dir="${src.dir}/xml/simulator" includes="*.xml"/>
+    </copy>
+
+    <copy file="${src.dir}/xml/robot/KheperaComConfig.xml"
+          todir="${release.dir}/xml/robot"/>
+
+    <copy file="${src.dir}/xml/robot/khepera_robot.xml"
+          todir="${release.dir}/xml/robot"/>
+
+
+
+    <copy file="${src.dir}/hinton/fitnessfunctions/TimerBenchmark.java"
+          todir="${release.dir}/hinton/fitnessfunctions"/>
+
+    <copy file="${build.dir}/hinton/fitnessfunctions/TimerBenchmark.class"
+          todir="${release.dir}/hinton/fitnessfunctions"/>
+
+    <copy file="${src.dir}/hinton/robots/NoRobCom.java"
+          todir="${release.dir}/hinton/robots"/>
+
+    <copy file="${build.dir}/hinton/robots/NoRobCom.class"
+          todir="${release.dir}/hinton/robots"/>
+
+    <copy file="${src.dir}/hinton/fitnessfunctions/NoFitness.java"
+          todir="${release.dir}/hinton/fitnessfunctions"/>
+
+    <copy file="${build.dir}/hinton/fitnessfunctions/NoFitness.class"
+          todir="${release.dir}/hinton/fitnessfunctions"/>
+
+    <copy file="${src.dir}/hinton/robots/KheperaCom.java"
+          todir="${release.dir}/hinton/robots"/>
+
+    <copy file="${build.dir}/hinton/robots/KheperaCom.class"
+          todir="${release.dir}/hinton/robots"/>
+
+    <copy todir="${release.dir}/brightwell/nets">
+      <fileset dir="${build.dir}/brightwell/nets">
+        <include name="OneNeuronNet.java"/>
+      </fileset>
+      <fileset dir="${build.dir}/brightwell/nets">
+        <include name="OneNeuronNet.class"/>
+      </fileset>
+    </copy>
+
+    <copy todir="${release.dir}/xml/config/brightwell">
+      <fileset dir="${src.dir}/xml/config/brightwell">
+        <include name="*.xml"/>
+      </fileset>
+    </copy>
+
+
+    <copy todir="${release.dir}/brightwell/tools">
+      <fileset dir="${build.dir}/brightwell/tools">
+        <include name="*.class"/>
+      </fileset>
+    </copy>
+
+    <copy file="${build.dir}/brightwell/tools/Tutorial.class"
+          todir="${release.dir}/brightwell/tools"/>
+
+    <copy file="${src.dir}/brightwell/tools/Tutorial.java"
+          todir="${release.dir}/brightwell/tools"/>
+
+    <copy file="${lib.dir}/log4j-1.2.8.jar" todir="${release.lib.dir}"/>
+
+    <copy file="${lib.dir}/JSAP-2.1.jar" todir="${release.lib.dir}"/>
+
+    <copy file="${lib.dir}/epsgraphics.jar" todir="${release.lib.dir}"/>
+    
+    <copy file="${lib.dir}/crimson-1.1.3.jar" todir="${release.lib.dir}"/>
+
+    <copy file="${lib.dir}/jcommon-1.0.0-rc1.jar" todir="${release.lib.dir}"/>
+
+    <copy file="${lib.dir}/jfreechart-1.0.0-rc1.jar" 
+      todir="${release.lib.dir}"/>
+
+    <copy file="${src.dir}/Makefile.unix.ISEE" 
+          tofile="${release.dir}/Makefile.unix"/>
+
+    <copy file="${src.dir}/Makefile.win32" 
+          tofile="${release.dir}/Makefile.win32"/>
+
+    <copy file="${doc.dir}/README.ISEE" 
+          tofile="${release.dir}/README"/>
+
+  </target>
+
+
+  <target name="prepare_distribute_with_docs" depends="prepare_distribute,
+    javadoc " description="move and pack stuff"/>
+
+  <!-- **********************************************************  -->
+  <!-- Distribute Tasks                                    -->
+  <!-- **********************************************************  -->
+
+
+  <target name="distribute" depends="prepare_distribute"
+          description="move and pack stuff">
+
+    <copy todir="${release.dir}/learningrules">
+      <fileset dir="${src.dir}/learningrules">
+        <include name="*.java"/>
+      </fileset>
+    </copy>
+
+    <copy todir="${release.dir}/learningrules">
+      <fileset dir="${build.dir}/learningrules">
+        <include name="*.class"/>
+      </fileset>
+    </copy>
+
+    <copy file="${dist.dir}/${evosun_jar_name}.jar" 
+      tofile="${release.dir}/${evosun_jar_name}.jar"/>
+
+    <copy file="${dist.dir}/${brightwell_jar_name}.jar" 
+          tofile="${release.dir}/${brightwell_jar_name}.jar"/>
+
+    <copy file="${dist.dir}/${hinton_jar_name}.jar" 
+          tofile="${release.dir}/${hinton_jar_name}.jar"/>
+
+    <copy file="${dist.dir}/${reading_jar_name}.jar" 
+          tofile="${release.dir}/${reading_jar_name}.jar"/>
+
+    <copy file="${dist.dir}/${newbury_jar_name}.jar" 
+          tofile="${release.dir}/${newbury_jar_name}.jar"/>
+
+    <copy file="${dist.dir}/${beaumys_jar_name}.jar" 
+          tofile="${release.dir}/${beaumys_jar_name}.jar"/>
+
+    <zip destfile="${release.dist.name}-${DSTAMP}-${svn.info.rev}.zip">
+      <zipfileset dir="${release.dir}" prefix="ISEE"/>
+    </zip>
+
+    <delete dir="${release.dir}"/>
+    <delete dir="${dist.dir}"/>
+
+    <move file="${release.dist.name}-${DSTAMP}-${svn.info.rev}.zip"
+      todir="/tmp"/>
+
+  </target>
+
+  <target name="distribute_with_docs" depends="prepare_distribute_with_docs,
+    distribute" description="move and pack stuff"/>
+
+
+</project>
+

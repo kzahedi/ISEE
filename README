@@ -1,0 +1,18 @@
+ISEE requires third party jar files which were free to download at the time ISEE
+was started. For some jar files, the licence has changed since ISEE was started,
+so that it is not clear if they may be provided with the ISEE source.
+
+Each library will be checked, and if the current version of the licence allows
+its distribution, it will be added with its licence to the lib directory. 
+
+The libraries are:
+
+crimson-1.1.3.jar
+epsgraphics.jar
+jcommon-1.0.0-rc1.jar
+jfreechart-1.0.0-rc1.jar
+jreleaseinfo-1.3.0.jar
+JSAP-2.1.jar
+ledatastream.jar
+log4j-1.2.8.jar
+svninfo_task.jar

@@ -1,0 +1,19 @@
+Usage:
+
+To run EvoSun:
+java -jar evosun.jar 
+
+To run PoleBalancer
+java -cp evosun.jar Evolution.Pole.PoleFrame
+
+To run Hinton:
+java -jar hinton.jar
+
+To run Reading:
+java -jar reading.jar
+
+To run Brightwell:
+java -jar brightwell.jar
+
+Changes:
+02.07.05 Initial README
