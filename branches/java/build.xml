@@ -236,7 +236,7 @@
     <delete dir="${release_info.dir}/{release_info.name}"/>
 
     <!-- get svn properties -->
-    <!-- <svninfoproperties dir="." file="-r HEAD" verbose="true"/> -->
+    <svninfoproperties dir="." file="-r HEAD" verbose="true"/> 
 
     <tstamp/>
   </target>
@@ -257,8 +257,7 @@
                   buildNumProperty="buildnum">
       <parameter name="CompiledBy"    type="String"   value="${compiledby}" />
       <parameter name="CompiledWith"  type="String"   value="${compiledwith}" />
-      <parameter name="RevisionNum"   type="Integer" value="-1" /> 
-      <!--      <parameter name="RevisionNum"   type="Integer" value="${svn.info.rev}" /> -->
+      <parameter name="RevisionNum"   type="Integer" value="${svn.info.rev}" /> 
     </jreleaseinfo>
     <echo message="current build number: ${buildnum}" />
     <echo message="compiled by         : ${compiledby}" />
